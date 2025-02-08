@@ -1,5 +1,5 @@
 import { withPayload } from '@payloadcms/next/withPayload'
-
+import path from 'path';
 import redirects from './redirects.js'
 
 const NEXT_PUBLIC_SERVER_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -8,6 +8,13 @@ const NEXT_PUBLIC_SERVER_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  webpack(config) {
+    config.resolve.alias['tailwind.config.js'] = path.resolve(
+      process.cwd(),
+      'tailwind.config.ts'
+    );
+    return config;
+  },
   images: {
     remotePatterns: [
       ...[NEXT_PUBLIC_SERVER_URL /* 'https://example.com' */].map((item) => {
