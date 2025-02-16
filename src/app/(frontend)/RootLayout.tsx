@@ -1,11 +1,12 @@
-'use client';
+'use client'
 
-import './globals.css';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/app-sidebar';
-import { ThemeProvider } from '@/components/theme-provider';
-import { usePathname } from 'next/navigation';
-import { AdminSidebar } from '@/components/admin-sidebar';
+import './globals.css'
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/app-sidebar'
+import { ThemeProvider } from '@/components/theme-provider'
+import { usePathname } from 'next/navigation'
+import { AdminSidebar } from '@/components/admin-sidebar'
+
 
 // const geistSans = localFont({
 //   src: './fonts/GeistVF.woff',
@@ -18,20 +19,12 @@ import { AdminSidebar } from '@/components/admin-sidebar';
 //   weight: '100 900',
 // });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const currentPath = usePathname();
+export default function RootLayout({ user, children }: { user: any; children: React.ReactNode; }) {
+  const currentPath = usePathname()
+
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="light"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
       <SidebarProvider>
         {currentPath === '/pro' ? <AdminSidebar /> : <AppSidebar />}
 
@@ -43,5 +36,5 @@ export default function RootLayout({
         </main>
       </SidebarProvider>
     </ThemeProvider>
-  );
+  )
 }

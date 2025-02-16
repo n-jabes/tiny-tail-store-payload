@@ -204,7 +204,7 @@ export interface Post {
  */
 export interface Media {
   id: string;
-  alt?: string | null;
+  alt: string;
   caption?: {
     root: {
       type: string;
@@ -317,7 +317,10 @@ export interface Category {
  */
 export interface User {
   id: string;
-  name?: string | null;
+  firstname: string;
+  lastname: string;
+  role: 'user' | 'admin';
+  image?: (string | null) | Media;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -1208,7 +1211,10 @@ export interface CategoriesSelect<T extends boolean = true> {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
-  name?: T;
+  firstname?: T;
+  lastname?: T;
+  role?: T;
+  image?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
