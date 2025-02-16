@@ -19,7 +19,7 @@ import { AdminSidebar } from '@/components/admin-sidebar'
 //   weight: '100 900',
 // });
 
-export default function RootLayout({ user, children }: { user: any; children: React.ReactNode; }) {
+export default function RootLayout({ children }: { children: React.ReactNode; }) {
   const currentPath = usePathname()
 
 
