@@ -1,14 +1,14 @@
-import type { CollectionSlug, GlobalSlug, Payload, PayloadRequest, File } from 'payload'
+import type { CollectionSlug, GlobalSlug, Payload, PayloadRequest, File } from 'payload';
 
-import { contactForm as contactFormData } from './contact-form'
-import { contact as contactPageData } from './contact-page'
-import { home } from './home'
-import { image1 } from './image-1'
-import { image2 } from './image-2'
-import { imageHero1 } from './image-hero-1'
-import { post1 } from './post-1'
-import { post2 } from './post-2'
-import { post3 } from './post-3'
+import { contactForm as contactFormData } from './contact-form';
+import { contact as contactPageData } from './contact-page';
+import { home } from './home';
+import { image1 } from './image-1';
+import { image2 } from './image-2';
+import { imageHero1 } from './image-hero-1';
+import { post1 } from './post-1';
+import { post2 } from './post-2';
+import { post3 } from './post-3';
 
 const collections: CollectionSlug[] = [
   'categories',
@@ -18,8 +18,8 @@ const collections: CollectionSlug[] = [
   'forms',
   'form-submissions',
   'search',
-]
-const globals: GlobalSlug[] = ['header', 'footer']
+];
+const globals: GlobalSlug[] = ['header', 'footer'];
 
 // Next.js revalidation errors are normal when seeding the database without a server running
 // i.e. running `yarn seed` locally instead of using the admin UI within an active app
@@ -29,18 +29,16 @@ export const seed = async ({
   payload,
   req,
 }: {
-  payload: Payload
-  req: PayloadRequest
+  payload: Payload;
+  req: PayloadRequest;
 }): Promise<void> => {
-  payload.logger.info('Seeding database...')
+  payload.logger.info('Seeding database...');
 
-  // we need to clear the media directory before seeding
+  // Clear the media directory before seeding
   // as well as the collections and globals
-  // this is because while `yarn seed` drops the database
-  // the custom `/api/seed` endpoint does not
-  payload.logger.info(`— Clearing collections and globals...`)
+  payload.logger.info(`— Clearing collections and globals...`);
 
-  // clear the database
+  // Clear the database
   await Promise.all(
     globals.map((global) =>
       payload.updateGlobal({
@@ -54,19 +52,19 @@ export const seed = async ({
         },
       }),
     ),
-  )
+  );
 
   await Promise.all(
     collections.map((collection) => payload.db.deleteMany({ collection, req, where: {} })),
-  )
+  );
 
   await Promise.all(
     collections
       .filter((collection) => Boolean(payload.collections[collection].config.versions))
       .map((collection) => payload.db.deleteVersions({ collection, req, where: {} })),
-  )
+  );
 
-  payload.logger.info(`— Seeding demo author and user...`)
+  payload.logger.info(`— Seeding demo author and user...`);
 
   await payload.delete({
     collection: 'users',
@@ -76,9 +74,9 @@ export const seed = async ({
         equals: 'demo-author@example.com',
       },
     },
-  })
+  });
 
-  payload.logger.info(`— Seeding media...`)
+  payload.logger.info(`— Seeding media...`);
 
   const [image1Buffer, image2Buffer, image3Buffer, hero1Buffer] = await Promise.all([
     fetchFileByURL(
@@ -93,7 +91,7 @@ export const seed = async ({
     fetchFileByURL(
       'https://raw.githubusercontent.com/payloadcms/payload/refs/heads/main/templates/website/src/endpoints/seed/image-hero1.webp',
     ),
-  ])
+  ]);
 
   const [
     demoAuthor,
@@ -101,16 +99,19 @@ export const seed = async ({
     image2Doc,
     image3Doc,
     imageHomeDoc,
-    technologyCategory,
-    newsCategory,
-    financeCategory,
+    _technologyCategory, // Mark as intentionally unused
+    _newsCategory, // Mark as intentionally unused
+    _financeCategory, // Mark as intentionally unused
   ] = await Promise.all([
     payload.create({
       collection: 'users',
       data: {
-        name: 'Demo Author',
+        firstname: 'Demo', // Required field
+        lastname: 'Author', // Required field
+        name: 'Demo Author', // Automatically populated by the hook
         email: 'demo-author@example.com',
         password: 'password',
+        role: 'user', // Required field
       },
     }),
     payload.create({
@@ -133,7 +134,6 @@ export const seed = async ({
       data: imageHero1,
       file: hero1Buffer,
     }),
-
     payload.create({
       collection: 'categories',
       data: {
@@ -146,7 +146,6 @@ export const seed = async ({
         ],
       },
     }),
-
     payload.create({
       collection: 'categories',
       data: {
@@ -159,7 +158,6 @@ export const seed = async ({
         ],
       },
     }),
-
     payload.create({
       collection: 'categories',
       data: {
@@ -172,65 +170,26 @@ export const seed = async ({
         ],
       },
     }),
-    payload.create({
-      collection: 'categories',
-      data: {
-        title: 'Design',
-        breadcrumbs: [
-          {
-            label: 'Design',
-            url: '/design',
-          },
-        ],
-      },
-    }),
+  ]);
 
-    payload.create({
-      collection: 'categories',
-      data: {
-        title: 'Software',
-        breadcrumbs: [
-          {
-            label: 'Software',
-            url: '/software',
-          },
-        ],
-      },
-    }),
+  let demoAuthorID: number | string = demoAuthor.id;
 
-    payload.create({
-      collection: 'categories',
-      data: {
-        title: 'Engineering',
-        breadcrumbs: [
-          {
-            label: 'Engineering',
-            url: '/engineering',
-          },
-        ],
-      },
-    }),
-  ])
-
-  let demoAuthorID: number | string = demoAuthor.id
-
-  let image1ID: number | string = image1Doc.id
-  let image2ID: number | string = image2Doc.id
-  let image3ID: number | string = image3Doc.id
-  let imageHomeID: number | string = imageHomeDoc.id
+  let image1ID: number | string = image1Doc.id;
+  let image2ID: number | string = image2Doc.id;
+  let image3ID: number | string = image3Doc.id;
+  let imageHomeID: number | string = imageHomeDoc.id;
 
   if (payload.db.defaultIDType === 'text') {
-    image1ID = `"${image1Doc.id}"`
-    image2ID = `"${image2Doc.id}"`
-    image3ID = `"${image3Doc.id}"`
-    imageHomeID = `"${imageHomeDoc.id}"`
-    demoAuthorID = `"${demoAuthorID}"`
+    image1ID = `"${image1Doc.id}"`;
+    image2ID = `"${image2Doc.id}"`;
+    image3ID = `"${image3Doc.id}"`;
+    imageHomeID = `"${imageHomeDoc.id}"`;
+    demoAuthorID = `"${demoAuthorID}"`;
   }
 
-  payload.logger.info(`— Seeding posts...`)
+  payload.logger.info(`— Seeding posts...`);
 
   // Do not create posts with `Promise.all` because we want the posts to be created in order
-  // This way we can sort them by `createdAt` or `publishedAt` and they will be in the expected order
   const post1Doc = await payload.create({
     collection: 'posts',
     depth: 0,
@@ -238,7 +197,7 @@ export const seed = async ({
       disableRevalidate: true,
     },
     data: post1({ heroImage: image1Doc, blockImage: image2Doc, author: demoAuthor }),
-  })
+  });
 
   const post2Doc = await payload.create({
     collection: 'posts',
@@ -247,7 +206,7 @@ export const seed = async ({
       disableRevalidate: true,
     },
     data: post2({ heroImage: image2Doc, blockImage: image3Doc, author: demoAuthor }),
-  })
+  });
 
   const post3Doc = await payload.create({
     collection: 'posts',
@@ -256,61 +215,61 @@ export const seed = async ({
       disableRevalidate: true,
     },
     data: post3({ heroImage: image3Doc, blockImage: image1Doc, author: demoAuthor }),
-  })
+  });
 
-  // update each post with related posts
+  // Update each post with related posts
   await payload.update({
     id: post1Doc.id,
     collection: 'posts',
     data: {
       relatedPosts: [post2Doc.id, post3Doc.id],
     },
-  })
+  });
   await payload.update({
     id: post2Doc.id,
     collection: 'posts',
     data: {
       relatedPosts: [post1Doc.id, post3Doc.id],
     },
-  })
+  });
   await payload.update({
     id: post3Doc.id,
     collection: 'posts',
     data: {
       relatedPosts: [post1Doc.id, post2Doc.id],
     },
-  })
+  });
 
-  payload.logger.info(`— Seeding contact form...`)
+  payload.logger.info(`— Seeding contact form...`);
 
   const contactForm = await payload.create({
     collection: 'forms',
     depth: 0,
     data: contactFormData,
-  })
+  });
 
-  let contactFormID: number | string = contactForm.id
+  let contactFormID: number | string = contactForm.id;
 
   if (payload.db.defaultIDType === 'text') {
-    contactFormID = `"${contactFormID}"`
+    contactFormID = `"${contactFormID}"`;
   }
 
-  payload.logger.info(`— Seeding pages...`)
+  payload.logger.info(`— Seeding pages...`);
 
   const [_, contactPage] = await Promise.all([
     payload.create({
       collection: 'pages',
       depth: 0,
-      data: home({heroImage: imageHomeDoc, metaImage: image2Doc}),
+      data: home({ heroImage: imageHomeDoc, metaImage: image2Doc }),
     }),
     payload.create({
       collection: 'pages',
       depth: 0,
       data: contactPageData({ contactForm: contactForm }),
     }),
-  ])
+  ]);
 
-  payload.logger.info(`— Seeding globals...`)
+  payload.logger.info(`— Seeding globals...`);
 
   await Promise.all([
     payload.updateGlobal({
@@ -367,27 +326,27 @@ export const seed = async ({
         ],
       },
     }),
-  ])
+  ]);
 
-  payload.logger.info('Seeded database successfully!')
-}
+  payload.logger.info('Seeded database successfully!');
+};
 
 async function fetchFileByURL(url: string): Promise<File> {
   const res = await fetch(url, {
     credentials: 'include',
     method: 'GET',
-  })
+  });
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch file from ${url}, status: ${res.status}`)
+    throw new Error(`Failed to fetch file from ${url}, status: ${res.status}`);
   }
 
-  const data = await res.arrayBuffer()
+  const data = await res.arrayBuffer();
 
   return {
     name: url.split('/').pop() || `file-${Date.now()}`,
     data: Buffer.from(data),
     mimetype: `image/${url.split('.').pop()}`,
     size: data.byteLength,
-  }
+  };
 }

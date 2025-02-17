@@ -1,6 +1,5 @@
 import { CollectionConfig, FieldAccess, PayloadRequest } from 'payload';
 import { User } from '@/payload-types';
-import { authenticated } from '../../access/authenticated';
 
 const isAdmin: FieldAccess<User, PayloadRequest> = ({ req }) => {
   return req.user?.role === 'admin';

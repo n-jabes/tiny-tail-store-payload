@@ -315,10 +315,12 @@ export interface Category {
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
+
 export interface User {
   id: string;
   firstname: string;
   lastname: string;
+  name: string; // Add this field
   role: 'user' | 'admin';
   image?: (string | null) | Media;
   updatedAt: string;

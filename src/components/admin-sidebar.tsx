@@ -117,7 +117,7 @@ export function AdminSidebar({
 }: React.ComponentProps<typeof Sidebar>) {
   const { theme, setTheme } = useTheme();
 
-  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     setTheme('light');
   }, []);
