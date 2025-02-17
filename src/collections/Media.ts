@@ -16,7 +16,7 @@ const dirname = path.dirname(filename);
 export const Media: CollectionConfig = {
   slug: 'media',
   access: {
-    create: authenticated,
+    create: anyone,
     delete: authenticated,
     read: anyone,
     update: authenticated,
@@ -39,6 +39,7 @@ export const Media: CollectionConfig = {
   ],
   upload: {
     staticDir: path.resolve(dirname, '../../public/media'),
+    mimeTypes: ['image/*'],
     adminThumbnail: 'thumbnail',
     focalPoint: true,
     imageSizes: [

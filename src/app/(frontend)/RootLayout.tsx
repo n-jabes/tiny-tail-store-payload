@@ -6,22 +6,10 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { ThemeProvider } from '@/components/theme-provider'
 import { usePathname } from 'next/navigation'
 import { AdminSidebar } from '@/components/admin-sidebar'
+import { Toaster } from 'react-hot-toast'
 
-
-// const geistSans = localFont({
-//   src: './fonts/GeistVF.woff',
-//   variable: '--font-geist-sans',
-//   weight: '100 900',
-// });
-// const geistMono = localFont({
-//   src: './fonts/GeistMonoVF.woff',
-//   variable: '--font-geist-mono',
-//   weight: '100 900',
-// });
-
-export default function RootLayout({ children }: { children: React.ReactNode; }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const currentPath = usePathname()
-
 
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
@@ -35,6 +23,9 @@ export default function RootLayout({ children }: { children: React.ReactNode; })
           {children}
         </main>
       </SidebarProvider>
+
+      {/* Toast Notifications */}
+      <Toaster position="top-right" reverseOrder={false} />
     </ThemeProvider>
   )
 }

@@ -1,21 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'react-hot-toast'
 
 export default function Login() {
   const [email, setEmail] = useState('')
+  // const [role, setRole] = useState('user')
   const [password, setPassword] = useState('')
   const [firstname, setFirstname] = useState('')
   const [lastname, setLastname] = useState('')
-  const [role, setRole] = useState('user')
-  const [profilePicture, setProfilePicture] = useState<File | null>(null)
+  const [name, setName] = useState('')
+  // const [profilePicture, setProfilePicture] = useState<File | null>(null)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isRegistering, setIsRegistering] = useState(false)
   const router = useRouter()
 
-  // Handle login
+  useEffect(() => {
+    setName(`${firstname} ${lastname}`.trim())
+  }, [firstname, lastname])
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -25,29 +30,26 @@ export default function Login() {
     }
 
     setIsLoading(true)
-    console.log({ email, password })
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-        credentials: 'include', //important for cookie handling
+        credentials: 'include',
       })
 
       if (!response.ok) {
-        // If the response is JSON but contains an error
         const errorData = await response.json()
         throw new Error(errorData.message || 'Login failed')
       }
 
-      // If the response is successful
       const data = await response.json()
       console.log(data)
-      // document.cookie = `payload-token=${data.token}; path=/; Secure; HttpOnly; SameSite=Strict`;
-      // window.location.href = '/';
 
       router.refresh()
       router.push('/')
+      setIsRegistering(false)
     } catch (error) {
       console.error('Login error:', error)
       setError('Invalid email or password. Please try again.')
@@ -56,7 +58,6 @@ export default function Login() {
     }
   }
 
-  // Handle register
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -70,39 +71,84 @@ export default function Login() {
     formData.append('password', password)
     formData.append('firstname', firstname)
     formData.append('lastname', lastname)
-    formData.append('role', role)
+    formData.append('name', name)
+    formData.append('role', 'user')
 
-    if (profilePicture) {
-      formData.append('image', profilePicture)
-    }
+    // if (profilePicture) {
+    //   formData.append('image', profilePicture)
+    // }
+
+    // Log FormData contents
+    // for (const [key, value] of formData.entries()) {
+    //   console.log(key, value)
+    // }
+
+    const userData = {
+    email,
+    password,
+    firstname,
+    lastname,
+    name,
+    role: "user",
+  };
 
     setIsLoading(true)
+    
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users`, {
         method: 'POST',
-        body: formData,
-      })
-
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+        credentials: 'include',
+      });
+    
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Registration failed')
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
+    
+      toast.success("Registration successful! Logging in...");
+
+      // Automatically log in the user after registration
+      const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+      });
+
+      if (!loginResponse.ok) {
+        const errorData = await loginResponse.json();
+        throw new Error(errorData.message || 'Login failed after registration');
       }
 
-      const data = await response.json()
-      document.cookie = `payload-token=${data.token}; path=/; Secure; HttpOnly; SameSite=Strict`
-      window.location.href = '/'
+      toast.success("Login successful! Redirecting to login page...");
+
+      // Reset all input fields
+      setEmail('')
+      setPassword('')
+      setFirstname('')
+      setLastname('')
+      setName('')
+      // setProfilePicture(null)
+      setIsRegistering(false)
+
+      router.refresh();
+      router.push('/login');
     } catch (error) {
-      console.error('Registration error:', error)
-      setError('Registration failed. Please try again.')
+      console.error('Registration error:', error);
+      setError('Registration failed. Please try again.');
+      toast.error("Registration failed. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-600 backdrop-blur-lg">
       <div className="w-full max-w-md bg-popupBg rounded-2xl shadow-xl p-6 sm:p-8 h-[80vh] overflow-y-auto">
-        <div className="flex flex-col items-center h-full ">
+        <div className="flex flex-col items-center h-full">
           <h2 className="text-lg font-semibold text-title text-center">
             {isRegistering ? 'Create an account' : 'Sign in to your account'}
           </h2>
@@ -114,60 +160,56 @@ export default function Login() {
             onSubmit={isRegistering ? handleRegister : handleLogin}
           >
             <div className="space-y-4">
-              {/* First Name and Last Name (for Register only) */}
               {isRegistering && (
                 <>
-                  <div>
-                    <label htmlFor="firstname" className="sr-only">
-                      First Name
-                    </label>
-                    <input
-                      id="firstname"
-                      name="firstname"
-                      type="text"
-                      required
-                      className="w-full px-4 py-2 bg-gray-100 text-text rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="First name"
-                      value={firstname}
-                      onChange={(e) => setFirstname(e.target.value)}
-                    />
+                  <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="flex-1">
+                      <label htmlFor="firstname" className="sr-only">
+                        First Name
+                      </label>
+                      <input
+                        id="firstname"
+                        name="firstname"
+                        type="text"
+                        required
+                        className="w-full px-4 py-2 bg-gray-100 text-text rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="First name"
+                        value={firstname}
+                        onChange={(e) => setFirstname(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label htmlFor="lastname" className="sr-only">
+                        Last Name
+                      </label>
+                      <input
+                        id="lastname"
+                        name="lastname"
+                        type="text"
+                        required
+                        className="w-full px-4 py-2 bg-gray-100 text-text rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Last name"
+                        value={lastname}
+                        onChange={(e) => setLastname(e.target.value)}
+                      />
+                    </div>
                   </div>
+
                   <div>
-                    <label htmlFor="lastname" className="sr-only">
-                      Last Name
+                    <label htmlFor="name" className="block text-sm text-text">
+                      Full Name
                     </label>
                     <input
-                      id="lastname"
-                      name="lastname"
+                      id="name"
+                      name="name"
                       type="text"
-                      required
-                      className="w-full px-4 py-2 bg-gray-100 text-text rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Last name"
-                      value={lastname}
-                      onChange={(e) => setLastname(e.target.value)}
+                      readOnly
+                      className="w-full px-4 py-2 bg-gray-200 text-text rounded-md focus:outline-none"
+                      value={name}
                     />
                   </div>
 
-                  {/* Role Selection */}
-                  <div>
-                    <label htmlFor="role" className="block text-sm text-text">
-                      Role
-                    </label>
-                    <select
-                      id="role"
-                      name="role"
-                      required
-                      className="w-full px-4 py-2 bg-gray-100 text-text rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={role}
-                      onChange={(e) => setRole(e.target.value)}
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-
-                  {/* Profile Picture Upload */}
-                  <div>
+                  {/* <div>
                     <label htmlFor="image" className="block text-sm text-text">
                       Profile Picture
                     </label>
@@ -182,7 +224,7 @@ export default function Login() {
                         setProfilePicture(file)
                       }}
                     />
-                  </div>
+                  </div> */}
                 </>
               )}
 
