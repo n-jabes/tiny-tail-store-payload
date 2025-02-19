@@ -321,6 +321,8 @@ export interface User {
   lastname: string;
   name: string;
   role: 'user' | 'admin';
+  password?: string | null;
+  address?: string | null;
   image?: (string | null) | Media;
   updatedAt: string;
   createdAt: string;
@@ -331,7 +333,6 @@ export interface User {
   hash?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
-  password?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1216,6 +1217,8 @@ export interface UsersSelect<T extends boolean = true> {
   lastname?: T;
   name?: T;
   role?: T;
+  password?: T;
+  address?: T;
   image?: T;
   updatedAt?: T;
   createdAt?: T;

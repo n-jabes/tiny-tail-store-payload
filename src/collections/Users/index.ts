@@ -66,6 +66,23 @@ export const Users: CollectionConfig = {
       },
     },
     {
+      name: 'password',
+      type: 'text',
+      required: false,
+      admin: {
+        hidden: true, // Hide the password field in the admin UI
+      },
+      access: {
+        read: () => false, // Never allow reading the password
+        update: isSelfOrAdmin, // Allow users to update their own password
+      },
+    },
+    {
+      name: 'address',
+      type: 'text',
+      required: false,
+    },
+    {
       name: 'image',
       type: 'upload',
       relationTo: 'media',
