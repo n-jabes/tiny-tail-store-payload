@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import Image from 'next/image'
-import { Trash2, Upload, Eye, EyeOff, Edit } from 'lucide-react'
-import { FormEvent, useState } from 'react'
-import toast from 'react-hot-toast'
+import Image from 'next/image';
+import { Trash2, Upload, Eye, EyeOff, Edit } from 'lucide-react';
+import { FormEvent, useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function ProfilePage({ user }: { user: any }) {
-  const [passwordVisible, setPasswordVisible] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [isUpdating, setIsUpdating] = useState(false)
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [formData, setFormData] = useState({
     name: user.name || '',
     firstname: user.firstname || '',
@@ -18,7 +18,7 @@ export default function ProfilePage({ user }: { user: any }) {
     currentPassword: '',
     newPassword: '',
     image: user.image || '/profile.png', // Default image if no image is uploaded
-  })
+  });
 
   // Track whether the form has changes
   const hasChanges =
@@ -29,130 +29,131 @@ export default function ProfilePage({ user }: { user: any }) {
     formData.address !== user.address ||
     formData.image !== (user.image || '/profile.png') ||
     formData.currentPassword ||
-    formData.newPassword
+    formData.newPassword;
 
-const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setIsUpdating(true);
+  const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsUpdating(true);
 
-  try {
-    // Prepare the payload for the update
-    const payload: any = {
-      name: formData.name, // Include the name field
-      firstname: formData.firstname,
-      lastname: formData.lastname,
-      email: formData.email,
-      address: formData.address,
-    };
+    try {
+      // Prepare the payload for the update
+      const payload: any = {
+        name: formData.name, // Include the name field
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        address: formData.address,
+      };
 
-    // If the user is updating their password, include the password fields
-    if (formData.currentPassword && formData.newPassword) {
-      payload.currentPassword = formData.currentPassword;
-      payload.password = formData.newPassword;
+      // If the user is updating their password, include the password fields
+      if (formData.currentPassword && formData.newPassword) {
+        payload.currentPassword = formData.currentPassword;
+        payload.password = formData.newPassword;
+      }
+
+      // If the user is updating their image, include the image field
+      if (formData.image && formData.image !== (user.image || '/profile.png')) {
+        payload.image = formData.image;
+      }
+
+      // Send the update request to Payload's REST API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        credentials: 'include', // Include cookies for authentication
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      // Fetch the updated user data
+      const updatedUser = await response.json();
+      console.log('Updated User Data:', updatedUser); // Debugging: Log the server response
+
+      // Update the form data with the new user data
+      setFormData((prev) => ({
+        ...prev, // Preserve existing fields
+        name: updatedUser.name || prev.name,
+        firstname: updatedUser.firstname || prev.firstname,
+        lastname: updatedUser.lastname || prev.lastname,
+        email: updatedUser.email || prev.email,
+        address: updatedUser.address || prev.address,
+        image: updatedUser.image || prev.image,
+        currentPassword: '', // Reset password fields
+        newPassword: '',
+      }));
+
+      // Show success toast
+      toast.success('Profile updated successfully!');
+      setIsEditMode(false); // Exit edit mode
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setIsUpdating(false);
     }
+  };
 
-    // If the user is updating their image, include the image field
-    if (formData.image && formData.image !== (user.image || '/profile.png')) {
-      payload.image = formData.image;
-    }
+  const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
 
-    // Send the update request to Payload's REST API
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/${user.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-      credentials: 'include', // Include cookies for authentication
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update profile');
-    }
-
-    // Fetch the updated user data
-    const updatedUser = await response.json();
-
-    // Update the form data with the new user data
-    setFormData((prev) => ({
-      ...prev, // Preserve existing fields
-      name: updatedUser.name || prev.name,
-      firstname: updatedUser.firstname || prev.firstname,
-      lastname: updatedUser.lastname || prev.lastname,
-      email: updatedUser.email || prev.email,
-      address: updatedUser.address || prev.address,
-      image: updatedUser.image || prev.image,
-      currentPassword: '', // Reset password fields
-      newPassword: '',
-    }));
-
-    // Show success toast
-    toast.success('Profile updated successfully!');
-    setIsEditMode(false); // Exit edit mode
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    toast.error('Failed to update profile');
-  } finally {
-    setIsUpdating(false);
-  }
-};
-
-  const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible)
-
-  const toggleEditMode = () => setIsEditMode(!isEditMode)
+  const toggleEditMode = () => setIsEditMode(!isEditMode);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target
+    const { id, value } = e.target;
 
     // Update the form data
     setFormData((prev) => {
       const updatedFormData = {
         ...prev,
         [id]: value,
-      }
+      };
 
       // If firstname or lastname changes, update the name field
       if (id === 'firstname' || id === 'lastname') {
-        updatedFormData.name = `${updatedFormData.firstname} ${updatedFormData.lastname}`.trim()
+        updatedFormData.name = `${updatedFormData.firstname} ${updatedFormData.lastname}`.trim();
       }
 
-      return updatedFormData
-    })
-  }
+      return updatedFormData;
+    });
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('alt', 'Profile image') // Add the required `alt` field
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('alt', 'Profile image'); // Add the required `alt` field
 
       // Upload the image to the server
       const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/media`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
-      })
+      });
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to upload image')
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload image');
       }
 
-      const imageData = await response.json()
+      const imageData = await response.json();
       setFormData((prev) => ({
         ...prev,
         image: imageData.url, // Update the image URL in the form data
-      }))
-      toast.success('Image uploaded successfully!')
+      }));
+      toast.success('Image uploaded successfully!');
     } catch (error) {
-      console.error('Error uploading image:', error)
-      toast.error('Failed to upload image')
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
     }
-  }
+  };
 
   const handleDiscardChanges = () => {
     // Reset the form data to the original user data
@@ -165,10 +166,10 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
       currentPassword: '',
       newPassword: '',
       image: user.image || '/profile.png',
-    })
-    setIsEditMode(false) // Exit edit mode
-    toast.success('Changes discarded!')
-  }
+    });
+    setIsEditMode(false); // Exit edit mode
+    toast.success('Changes discarded!');
+  };
 
   return (
     <div className="p-6 mx-auto bg-contentBg mb-4 rounded-lg shadow-sm h-max w-full">
@@ -178,7 +179,7 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
       {/* Edit Mode Indicator */}
       {isEditMode ? (
         <div className="mb-4 p-2 bg-yellow-100 text-yellow-800 rounded-md">
-          You are in edit mode. Make your changes and click "Update" to save.
+          You are in edit mode. Make your changes and click &quot;Update&quot; to save.
         </div>
       ) : (
         <div className="mb-4 p-2 bg-gray-100 text-gray-800 rounded-md">
@@ -231,7 +232,9 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
                 />
               </div>
             )}
-            <p className="text-xs text-gray-500 mt-1">At least 256x256 PNG or JPG file</p>
+            <p className="text-xs text-gray-500 mt-1">
+              At least 256x256 PNG or JPG file
+            </p>
           </div>
 
           {/* Edit Button */}
@@ -246,10 +249,15 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
 
         {/* Personal Information Section */}
         <div className="space-y-4 mb-8 border-b border-gray-300 pb-6">
-          <h3 className="text-mb font-semibold text-text">Personal Information</h3>
+          <h3 className="text-mb font-semibold text-text">
+            Personal Information
+          </h3>
           <div className="w-5/6 grid grid-cols-2 gap-6">
             <div>
-              <label htmlFor="firstname" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="firstname"
+                className="block text-sm font-medium text-gray-700"
+              >
                 First name
               </label>
               <input
@@ -262,7 +270,10 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
               />
             </div>
             <div>
-              <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="lastname"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Last name
               </label>
               <input
@@ -279,7 +290,10 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
           {/* Address */}
           <div className="w-5/6 grid grid-cols-2 gap-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Email
               </label>
               <input
@@ -292,7 +306,10 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
               />
             </div>
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="address"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Address
               </label>
               <input
@@ -312,7 +329,10 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
           <h3 className="text-md font-semibold text-text">Password Change</h3>
           <div className="w-5/6 grid grid-cols-2 gap-6">
             <div className="relative">
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="currentPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Current password
               </label>
               <input
@@ -329,11 +349,18 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
                 onClick={togglePasswordVisibility}
                 className="absolute right-2 top-8"
               >
-                {passwordVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {passwordVisible ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
             <div className="relative">
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="newPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
                 New password
               </label>
               <input
@@ -350,7 +377,11 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
                 onClick={togglePasswordVisibility}
                 className="absolute right-2 top-8"
               >
-                {passwordVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {passwordVisible ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>
@@ -375,5 +406,5 @@ const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
         </div>
       </form>
     </div>
-  )
+  );
 }

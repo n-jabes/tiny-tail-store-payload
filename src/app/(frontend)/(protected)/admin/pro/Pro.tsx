@@ -11,13 +11,56 @@ import React, { useState } from 'react';
 import DataTable from './data-table';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+import { toast } from 'react-hot-toast'; // Import toast for notifications
 
-export default function Home() {
+// Define the type for the `users` prop
+type User = {
+  id: number;
+  userId: string;
+  name: string;
+  email: string;
+  plans: string;
+  spend: string;
+  role: string;
+  status: string;
+  joined: string;
+};
+
+// Define the props for the `Pro` component
+type ProProps = {
+  users: User[];
+};
+
+export default function Pro({ users }: ProProps) {
   const [selectedNavItem, setSelectedNavItem] = useState('Members');
   const [popupVisible, setPopupVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [isExporting, setIsExporting] = useState(false); // State for progress
   const [progress, setProgress] = useState(0); // State for progress percentage
+
+  // State for the new user form
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('user'); // Default role is 'user'
+  const [isLoading, setIsLoading] = useState(false);
+
+
+  // Use the `users` prop instead of the dummy `rows`
+  const [rows, setRows] = useState(users); // State to manage users for the table
+
+  const handlePopupClose = () => {
+    setPopupVisible(false);
+    // Reset form fields when closing the popup
+    setEmail('');
+    setPassword('');
+    setFirstname('');
+    setLastname('');
+    setName('');
+    setRole('user');
+  };
 
   const navbarItems = [
     {
@@ -66,73 +109,7 @@ export default function Home() {
       url: '#',
     },
   ];
-
-  const rows = [
-    {
-      id: 1,
-      name: 'John Smith',
-      email: 'test@gmail.com',
-      plans: '-',
-      spend: '0.00 USD',
-      role: 'Editor',
-      status: 'Confirm',
-      joined: 'July 24, 2024',
-    },
-    {
-      id: 2,
-      name: 'John Smith',
-      email: 'test@gmail.com',
-      plans: '-',
-      spend: '0.00 USD',
-      role: 'Editor',
-      status: 'Pending',
-      joined: 'July 24, 2024',
-    },
-    {
-      id: 3,
-      name: 'John Smith',
-      email: 'test@gmail.com',
-      plans: '-',
-      spend: '0.00 USD',
-      role: 'Editor',
-      status: 'Rejected',
-      joined: 'July 24, 2024',
-    },
-    {
-      id: 4,
-      name: 'John Smith',
-      email: 'test@gmail.com',
-      plans: '-',
-      spend: '0.00 USD',
-      role: 'Editor',
-      status: 'Confirm',
-      joined: 'July 24, 2024',
-    },
-    {
-      id: 5,
-      name: 'John Smith',
-      email: 'test@gmail.com',
-      plans: '-',
-      spend: '0.00 USD',
-      role: 'Editor',
-      status: 'Pending',
-      joined: 'July 24, 2024',
-    },
-    {
-      id: 6,
-      name: 'John Smith',
-      email: 'test@gmail.com',
-      plans: '-',
-      spend: '0.00 USD',
-      role: 'Editor',
-      status: 'Rejected',
-      joined: 'July 24, 2024',
-    },
-  ];
-
-  const handlePopupClose = () => {
-    setPopupVisible(false);
-  };
+  
 
   const handleExport = () => {
     setIsExporting(true);
@@ -159,6 +136,67 @@ export default function Home() {
     // Save the workbook as a file
     const excelFile = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     saveAs(new Blob([excelFile]), 'members_data.xlsx');
+  };
+
+  // Handle form submission for adding a new user
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !password || !firstname || !lastname) {
+      toast.error('Please fill in all fields.');
+      return;
+    }
+
+    const userData = {
+      email,
+      password,
+      firstname,
+      lastname,
+      name: `${firstname} ${lastname}`.trim(),
+      role,
+    };
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create user');
+      }
+
+      const newUser = await response.json();
+
+      // Update the rows state to include the new user
+      setRows((prevRows) => [
+        ...prevRows,
+        {
+          id: prevRows.length + 1, // Temporary ID (replace with actual ID from the server)
+          userId: newUser.userId,
+          name: newUser.name,
+          email: newUser.email,
+          plans: '', // Add default values for other fields
+          spend: '',
+          role: newUser.role,
+          status: 'Active', // Default status
+          joined: new Date().toLocaleDateString(), // Default joined date
+        },
+      ]);
+
+      toast.success('User created successfully!');
+      handlePopupClose(); // Close the popup after successful creation
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast.error('Failed to create user. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -191,27 +229,41 @@ export default function Home() {
               Add new members
             </h2>
 
-            <form>
+            <form onSubmit={handleAddUser}>
               <div className="space-y-4">
+                {/* First Name */}
                 <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Name
+                  <label htmlFor="firstname" className="block text-sm font-medium text-gray-700">
+                    First Name
                   </label>
                   <input
-                    id="name"
+                    id="firstname"
                     type="text"
                     className="text-sm mt-1 outline-none block w-full p-2 border border-gray-300 rounded-md bg-input shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter name"
+                    placeholder="Enter first name"
+                    value={firstname}
+                    onChange={(e) => setFirstname(e.target.value)}
                   />
                 </div>
+
+                {/* Last Name */}
                 <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700"
-                  >
+                  <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
+                  <input
+                    id="lastname"
+                    type="text"
+                    className="text-sm mt-1 outline-none block w-full p-2 border border-gray-300 rounded-md bg-input shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter last name"
+                    value={lastname}
+                    onChange={(e) => setLastname(e.target.value)}
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                     Email
                   </label>
                   <input
@@ -219,21 +271,40 @@ export default function Home() {
                     type="email"
                     className="text-sm mt-1 outline-none block w-full p-2 border border-gray-300 rounded-md bg-input shadow-sm focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Enter email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
+
+                {/* Password */}
                 <div>
-                  <label
-                    htmlFor="role"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Role
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password
                   </label>
                   <input
-                    id="role"
-                    type="text"
+                    id="password"
+                    type="password"
                     className="text-sm mt-1 outline-none block w-full p-2 border border-gray-300 rounded-md bg-input shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter role"
+                    placeholder="Enter password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                    Role
+                  </label>
+                  <select
+                    id="role"
+                    className="text-sm mt-1 outline-none block w-full p-2 border border-gray-300 rounded-md bg-input shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
               </div>
 
@@ -248,15 +319,18 @@ export default function Home() {
                 </button>
                 <button
                   type="submit"
-                  className="text-sm flex-1 py-2 bg-button-bg text-white rounded-md hover:bg-blue-700"
+                  className="text-sm flex-1 py-2 bg-button-bg text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  disabled={isLoading}
                 >
-                  Save
+                  {isLoading ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+
 
       {/* navbar */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">

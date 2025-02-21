@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import RootLayout from "./RootLayout";
+import { getUser } from "@/utilities/getUser";
 
 export const metadata: Metadata = {
   title: "Tiny Tail Store",
@@ -9,11 +10,13 @@ export const metadata: Metadata = {
 };
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
+  const { user } = await getUser();
+  console.log("logged in user", user)
   
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <RootLayout>{children}</RootLayout>
+        <RootLayout user={user}>{children}</RootLayout>
       </body>
     </html>
   );

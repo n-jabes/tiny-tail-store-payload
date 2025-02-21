@@ -78,7 +78,7 @@ const columns: GridColDef[] = [
 const paginationModel = { page: 0, pageSize: 5 };
 
 interface DataTableProps {
-  rows: Array<{ id: number; name: string; email: string; plans: string; spend: string; role: string; status: string; joined: string }>;
+  rows: Array<{ id: number; userId: string; name: string; email: string; plans: string; spend: string; role: string; status: string; joined: string }>;
 }
 
 export default function DataTable({ rows }: DataTableProps) {

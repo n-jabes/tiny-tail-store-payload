@@ -33,7 +33,7 @@ const data = {
   menu: [
     {
       title: 'Dashboard',
-      url: '/pro',
+      url: '/admin/pro',
       isActive: true,
       icon: LayoutDashboard,
     },

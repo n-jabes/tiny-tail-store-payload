@@ -37,7 +37,7 @@ const data = {
   membership: [
     {
       title: 'Utlimate Membership (Pro)',
-      url: '/pro',
+      url: '/admin/pro',
       isActive: true,
       icon: ShieldHalf,
     },
