@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const { user } = await getUser();
-  console.log("logged in user", user)
-  
+  const { user } = await getUser(); // Fetch user data on the server
+  console.log("logged in user", user);
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body>

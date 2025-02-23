@@ -17,10 +17,9 @@ export default function ProfilePage({ user }: { user: any }) {
     address: user.address || '',
     currentPassword: '',
     newPassword: '',
-    image: user.image || '/profile.png', // Default image if no image is uploaded
+    image: user.image || '/profile.png',
   });
 
-  // Track whether the form has changes
   const hasChanges =
     formData.name !== user.name ||
     formData.firstname !== user.firstname ||
@@ -36,34 +35,30 @@ export default function ProfilePage({ user }: { user: any }) {
     setIsUpdating(true);
 
     try {
-      // Prepare the payload for the update
       const payload: any = {
-        name: formData.name, // Include the name field
+        name: formData.name,
         firstname: formData.firstname,
         lastname: formData.lastname,
         email: formData.email,
         address: formData.address,
       };
 
-      // If the user is updating their password, include the password fields
       if (formData.currentPassword && formData.newPassword) {
         payload.currentPassword = formData.currentPassword;
         payload.password = formData.newPassword;
       }
 
-      // If the user is updating their image, include the image field
       if (formData.image && formData.image !== (user.image || '/profile.png')) {
         payload.image = formData.image;
       }
 
-      // Send the update request to Payload's REST API
       const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users/${user.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -71,26 +66,23 @@ export default function ProfilePage({ user }: { user: any }) {
         throw new Error(errorData.message || 'Failed to update profile');
       }
 
-      // Fetch the updated user data
       const updatedUser = await response.json();
-      console.log('Updated User Data:', updatedUser); // Debugging: Log the server response
+      console.log('Updated User Data:', updatedUser);
 
-      // Update the form data with the new user data
       setFormData((prev) => ({
-        ...prev, // Preserve existing fields
+        ...prev,
         name: updatedUser.name || prev.name,
         firstname: updatedUser.firstname || prev.firstname,
         lastname: updatedUser.lastname || prev.lastname,
         email: updatedUser.email || prev.email,
         address: updatedUser.address || prev.address,
         image: updatedUser.image || prev.image,
-        currentPassword: '', // Reset password fields
+        currentPassword: '',
         newPassword: '',
       }));
 
-      // Show success toast
       toast.success('Profile updated successfully!');
-      setIsEditMode(false); // Exit edit mode
+      setIsEditMode(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
@@ -100,26 +92,14 @@ export default function ProfilePage({ user }: { user: any }) {
   };
 
   const togglePasswordVisibility = () => setPasswordVisible(!passwordVisible);
-
   const toggleEditMode = () => setIsEditMode(!isEditMode);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-
-    // Update the form data
-    setFormData((prev) => {
-      const updatedFormData = {
-        ...prev,
-        [id]: value,
-      };
-
-      // If firstname or lastname changes, update the name field
-      if (id === 'firstname' || id === 'lastname') {
-        updatedFormData.name = `${updatedFormData.firstname} ${updatedFormData.lastname}`.trim();
-      }
-
-      return updatedFormData;
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,9 +109,8 @@ export default function ProfilePage({ user }: { user: any }) {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('alt', 'Profile image'); // Add the required `alt` field
+      formData.append('alt', 'Profile image');
 
-      // Upload the image to the server
       const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/media`, {
         method: 'POST',
         body: formData,
@@ -146,7 +125,7 @@ export default function ProfilePage({ user }: { user: any }) {
       const imageData = await response.json();
       setFormData((prev) => ({
         ...prev,
-        image: imageData.url, // Update the image URL in the form data
+        image: imageData.url,
       }));
       toast.success('Image uploaded successfully!');
     } catch (error) {
@@ -156,7 +135,6 @@ export default function ProfilePage({ user }: { user: any }) {
   };
 
   const handleDiscardChanges = () => {
-    // Reset the form data to the original user data
     setFormData({
       name: user.name || '',
       firstname: user.firstname || '',
@@ -167,16 +145,14 @@ export default function ProfilePage({ user }: { user: any }) {
       newPassword: '',
       image: user.image || '/profile.png',
     });
-    setIsEditMode(false); // Exit edit mode
+    setIsEditMode(false);
     toast.success('Changes discarded!');
   };
 
   return (
     <div className="p-6 mx-auto bg-contentBg mb-4 rounded-lg shadow-sm h-max w-full">
-      {/* Header */}
       <h1 className="text-xl font-semibold text-text mb-6">My Profile</h1>
 
-      {/* Edit Mode Indicator */}
       {isEditMode ? (
         <div className="mb-4 p-2 bg-yellow-100 text-yellow-800 rounded-md">
           You are in edit mode. Make your changes and click &quot;Update&quot; to save.
@@ -187,11 +163,8 @@ export default function ProfilePage({ user }: { user: any }) {
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleFormSubmit}>
-        {/* Profile Image Section */}
         <div className="flex items-start gap-2 mb-6 border-b border-gray-300 pb-6">
-          {/* Profile Image */}
           <div className="relative mr-6">
             <Image
               alt="Profile Image"
@@ -211,7 +184,6 @@ export default function ProfilePage({ user }: { user: any }) {
             )}
           </div>
 
-          {/* Upload Info */}
           <div>
             <h2 className="text-md font-semibold text-text">{formData.name}</h2>
             {isEditMode && (
@@ -237,7 +209,6 @@ export default function ProfilePage({ user }: { user: any }) {
             </p>
           </div>
 
-          {/* Edit Button */}
           <button
             type="button"
             onClick={toggleEditMode}
@@ -247,11 +218,8 @@ export default function ProfilePage({ user }: { user: any }) {
           </button>
         </div>
 
-        {/* Personal Information Section */}
         <div className="space-y-4 mb-8 border-b border-gray-300 pb-6">
-          <h3 className="text-mb font-semibold text-text">
-            Personal Information
-          </h3>
+          <h3 className="text-mb font-semibold text-text">Personal Information</h3>
           <div className="w-5/6 grid grid-cols-2 gap-6">
             <div>
               <label
@@ -287,7 +255,6 @@ export default function ProfilePage({ user }: { user: any }) {
             </div>
           </div>
 
-          {/* Address */}
           <div className="w-5/6 grid grid-cols-2 gap-6">
             <div>
               <label
@@ -324,7 +291,6 @@ export default function ProfilePage({ user }: { user: any }) {
           </div>
         </div>
 
-        {/* Password Change Section */}
         <div className="space-y-4 mb-8">
           <h3 className="text-md font-semibold text-text">Password Change</h3>
           <div className="w-5/6 grid grid-cols-2 gap-6">
@@ -387,7 +353,6 @@ export default function ProfilePage({ user }: { user: any }) {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex items-center justify-end gap-4 mt-8">
           <button
             type="button"

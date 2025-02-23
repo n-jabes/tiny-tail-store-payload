@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import DataTable from './data-table';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
-import { toast } from 'react-hot-toast'; // Import toast for notifications
+import { toast } from 'react-hot-toast';
 
 // Define the type for the `users` prop
 type User = {
@@ -29,14 +29,15 @@ type User = {
 // Define the props for the `Pro` component
 type ProProps = {
   users: User[];
+  addUser: (newUserData: any) => Promise<any>; // Add the addUser function as a prop
 };
 
-export default function Pro({ users }: ProProps) {
+export default function Pro({ users, addUser }: ProProps) {
   const [selectedNavItem, setSelectedNavItem] = useState('Members');
   const [popupVisible, setPopupVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
-  const [isExporting, setIsExporting] = useState(false); // State for progress
-  const [progress, setProgress] = useState(0); // State for progress percentage
+  const [isExporting, setIsExporting] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   // State for the new user form
   const [email, setEmail] = useState('');
@@ -44,12 +45,11 @@ export default function Pro({ users }: ProProps) {
   const [firstname, setFirstname] = useState('');
   const [lastname, setLastname] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState('user'); // Default role is 'user'
+  const [role, setRole] = useState('user');
   const [isLoading, setIsLoading] = useState(false);
 
-
   // Use the `users` prop instead of the dummy `rows`
-  const [rows, setRows] = useState(users); // State to manage users for the table
+  const [rows, setRows] = useState(users);
 
   const handlePopupClose = () => {
     setPopupVisible(false);
@@ -109,7 +109,6 @@ export default function Pro({ users }: ProProps) {
       url: '#',
     },
   ];
-  
 
   const handleExport = () => {
     setIsExporting(true);
@@ -129,7 +128,7 @@ export default function Pro({ users }: ProProps) {
   };
 
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(rows); // Convert the rows into a worksheet
+    const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Members');
 
@@ -159,26 +158,15 @@ export default function Pro({ users }: ProProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create user');
-      }
-
-      const newUser = await response.json();
+      // Use the `addUser` function passed as a prop
+      const newUser = await addUser(userData);
 
       // Update the rows state to include the new user
       setRows((prevRows) => [
         ...prevRows,
         {
           id: prevRows.length + 1, // Temporary ID (replace with actual ID from the server)
-          userId: newUser.userId,
+          userId: newUser.id, // Use the ID returned by the server
           name: newUser.name,
           email: newUser.email,
           plans: '', // Add default values for other fields
@@ -201,7 +189,7 @@ export default function Pro({ users }: ProProps) {
 
   return (
     <div className="px-2 md:px-4 lg:px-6 p-b-6 pt-1 mx-auto mb-4 rounded-lg shadow-sm h-max min-h-[89.5vh] w-full">
-      {/* popup to add a member */}
+      {/* Popup to add a member */}
       {popupVisible && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
           <div className="w-[95%] md:w-full max-w-md bg-popupBg rounded-2xl shadow-xl p-6 sm:p-8 relative">
@@ -330,9 +318,7 @@ export default function Pro({ users }: ProProps) {
         </div>
       )}
 
-
-
-      {/* navbar */}
+      {/* Navbar */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         {navbarItems.map((item) => (
           <div
@@ -349,7 +335,7 @@ export default function Pro({ users }: ProProps) {
         ))}
       </div>
 
-      {/* main content */}
+      {/* Main Content */}
       {selectedNavItem === 'Members' && (
         <div className="mt-4">
           <h1 className="text-title font-semibold text-lg mb-1">
@@ -357,7 +343,7 @@ export default function Pro({ users }: ProProps) {
           </h1>
           <section className="rounded-lg bg-contentBg p-2 md:p-4 lg:p-6 shadow">
             <div className="flex items-center justify-between flex-wrap">
-              {/* search input */}
+              {/* Search Input */}
               <div className="relative max-w-md md:w-full mb-1 lg:mb-0">
                 <input
                   type="text"
@@ -367,7 +353,7 @@ export default function Pro({ users }: ProProps) {
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               </div>
 
-              {/* filters */}
+              {/* Filters */}
               <div className="flex gap-4 items-center">
                 <div className="flex gap-2 items-center">
                   <div className="p-2 bg-cardBg text-text cursor-pointer rounded-md relative">
@@ -440,7 +426,7 @@ export default function Pro({ users }: ProProps) {
                               x
                             </span>
                           </div>
-                          {/* add the progress bar here */}
+                          {/* Progress Bar */}
                           <div className="mt-2 bg-gray-200 rounded-full h-2 overflow-hidden">
                             <div
                               className="bg-buttonBg h-2 rounded-full transition-all"
@@ -455,7 +441,7 @@ export default function Pro({ users }: ProProps) {
                   </div>
                 </div>
 
-                {/* add new member button */}
+                {/* Add New Member Button */}
                 <div
                   className="flex items-center gap-2 bg-button-bg px-4 py-2 font-medium cursor-pointer text-white rounded-md text-sm"
                   onClick={() => setPopupVisible(true)}

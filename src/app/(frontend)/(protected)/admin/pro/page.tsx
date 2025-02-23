@@ -1,10 +1,29 @@
+// app/admin/pro/page.tsx
 import Pro from './Pro'; // Your client component
-import { getCachedUsers } from '@/utilities/getDocument';
+import { getAllUsers } from '@/utilities/getDocument'; // Import the updated function
+import { getPayload } from 'payload';
+import configPromise from '@payload-config';
+
+// Mark this function as a Server Action
+async function addUser(newUserData: any) {
+  'use server'; // Add this directive
+
+  const payload = await getPayload({ config: configPromise });
+
+  // Add the new user
+  const newUser = await payload.create({
+    collection: 'users',
+    data: newUserData,
+  });
+
+  console.log("New user added:", newUser);
+
+  return newUser;
+}
 
 export default async function AdminProPage() {
   // Fetch all users (excluding admins)
-  const users = await getCachedUsers();
-  console.log("users: ", users)
+  const users = await getAllUsers(); // Use the updated function
 
   // Transform the data into the required format
   const transformedUsers = users.map((user, index) => ({
@@ -23,6 +42,6 @@ export default async function AdminProPage() {
     }), // Format joined date
   }));
 
-  // Pass the transformed data to the client component
-  return <Pro users={transformedUsers} />;
+  // Pass the transformed data and the addUser function to the client component
+  return <Pro users={transformedUsers} addUser={addUser} />;
 }

@@ -16,14 +16,14 @@ export const Users: CollectionConfig = {
 
   access: {
     create: (): boolean => true,
-    read: isAdmin,
+    read: (): boolean => true, // Allow all users to read (temporarily for testing) turn back to isAdmin
     update: isSelfOrAdmin,
     delete: isAdmin,
   },
 
   admin: {
     defaultColumns: ['name', 'email', 'role'],
-    useAsTitle: 'name',
+    useAsTitle: 'email',
   },
 
   fields: [
