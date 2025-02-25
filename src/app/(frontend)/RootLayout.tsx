@@ -7,40 +7,26 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin-sidebar';
 import { Toaster } from 'react-hot-toast';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react'; // Import useEffect and useState
+import { UserProvider, useUser } from '@/context/user-context'; // Import UserProvider and useUser
 
 export default function RootLayout({ children, user: initialUser }: { children: React.ReactNode; user: any }) {
+  return (
+    <UserProvider initialUser={initialUser}> {/* Wrap with UserProvider */}
+      <LayoutContent>{children}</LayoutContent>
+    </UserProvider>
+  );
+}
+
+function LayoutContent({ children }: { children: React.ReactNode }) {
   const currentPath = usePathname();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(initialUser); // Use initial user data from the server
+  const { user, isLoading } = useUser(); // Use the user from the context
 
   console.log("user to admin", user);
 
   // Check if the current path includes '/admin'
   const isAdminPath = currentPath.includes('/admin');
-
-  // Revalidate user data on the client side if needed
-  useEffect(() => {
-    const revalidateUser = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/user`); // Fetch user data from an API route
-        const { user: updatedUser } = await response.json();
-        setUser(updatedUser); // Update the user data
-        setIsLoading(false); // Mark loading as complete
-      } catch (error) {
-        console.error("Failed to revalidate user:", error);
-        setIsLoading(false); // Mark loading as complete even if there's an error
-      }
-    };
-
-    // Only revalidate if the initial user data is not available
-    if (!initialUser) {
-      revalidateUser();
-    } else {
-      setIsLoading(false); // Mark loading as complete if initial user data is available
-    }
-  }, [initialUser]);
 
   // Redirect non-admin users trying to access admin paths
   useEffect(() => {
