@@ -44,8 +44,8 @@ const data = {
   ],
   menu: [
     {
-      title: 'Dashboard',
-      url: '/dashboard',
+      title: 'Admin Dashboard',
+      url: '/admin',
       isActive: true,
       icon: LayoutDashboard,
     },
